@@ -1,0 +1,92 @@
+<mxfile host="65bd71144e">
+    <diagram name="Event Reservation - Improved" id="UseCase_Event_System_V2">
+        <mxGraphModel dx="1040" dy="704" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="System" value="Système de Réservation d&#39;Événements" style="shape=rect;html=1;verticalAlign=top;fontStyle=1;fontSize=14;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="40" width="760" height="640" as="geometry"/>
+                </mxCell>
+                <mxCell id="Admin" value="Administrateur" style="shape=umlActor;verticalAlign=bottom;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="150" width="40" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="Participant" value="Participant" style="shape=umlActor;verticalAlign=bottom;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="450" width="40" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="Label1" value="GESTION ÉVÉNEMENTS" style="text;html=1;fontStyle=1;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="220" y="60" width="150" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="Label2" value="GESTION RÉSERVATIONS" style="text;html=1;fontStyle=1;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="580" y="60" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="UC1" value="Créer / Modifier&#xa;Événement" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="100" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="UC3" value="Publier / Annuler&#xa;Événement" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="180" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="UC5" value="Valider / Refuser&#xa;Réservation" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="600" y="100" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="UC8" value="Consulter Statistiques&#xa;et Dashboard" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="600" y="180" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="UC9" value="Rechercher / Consulter&#xa;Événements" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="400" width="170" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="UC11" value="Réserver un Événement" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="500" y="400" width="170" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="UC13" value="Gérer ses Réservations&#xa;(Annuler/Voir)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="720" y="400" width="170" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="UC14" value="Télécharger&#xa;Ticket PDF" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="720" y="520" width="170" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="R1" style="endArrow=none;html=1;entryX=0;entryY=0.5;" parent="1" source="Admin" target="UC1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="R2" style="endArrow=none;html=1;entryX=0;entryY=0.5;" parent="1" source="Admin" target="UC3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="R3" style="endArrow=none;html=1;entryX=0;entryY=0.5;" parent="1" source="Admin" target="UC5" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="300" y="80"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="R4" style="endArrow=none;html=1;entryX=0;entryY=0.5;" parent="1" source="Admin" target="UC8" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="310" y="260"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="R5" style="endArrow=none;html=1;entryX=0;entryY=0.5;" parent="1" source="Participant" target="UC9" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="R6" style="endArrow=none;html=1;entryX=0;entryY=0.5;" parent="1" source="Participant" target="UC11" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="330" y="480"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="R7" style="endArrow=none;html=1;entryX=0;entryY=0.5;" parent="1" source="Participant" target="UC13" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="540" y="520"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="D1" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" parent="1" source="UC9" target="UC11" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="D2" value="&lt;&lt;extend&gt;&gt;" style="endArrow=open;dashed=1;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" parent="1" source="UC13" target="UC14" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
