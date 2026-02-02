@@ -1,0 +1,40 @@
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+  pull_request:
+    paths:
+      - 'backend/**'
+
+jobs:
+  backend-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+        working-directory: backend
+
+      - name: Run ESLint
+        run: npm run lint
+        working-directory: backend
+
+      - name: Run Jest tests
+        run: npm run test
+        working-directory: backend
+
+      - name: Build application
+        run: npm run build
+        working-directory: backend
