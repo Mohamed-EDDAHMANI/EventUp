@@ -90,10 +90,10 @@ Task : Tests E2E pour le flux "Connexion -> Réservation -> Confirmation".
 Task : Tests de composants React (React Testing Library).
 
 🛠 Automatisation JIRA conseillée
-<!-- Pour respecter votre consigne d'automatisation :
+Pour respecter votre consigne d'automatisation :
 
 Trigger : "When a Pull Request is merged"
 
 Condition : "If status is In Progress"
 
-Action : "Transition issue to Done" -->
+Action : "Transition issue to Done"
