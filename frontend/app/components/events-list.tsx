@@ -1,12 +1,5 @@
-'use client';
-
-import { useEffect } from 'react';
-import Link from 'next/link';
-import { useDispatch, useSelector } from 'react-redux';
-import type { AppDispatch, RootState } from '@/lib/store';
-import { setEvents, setLoading, setError } from '@/lib/slices/events-slice';
-import { eventsService } from '@/lib/api/services/events.service';
 import type { EventItem } from '@/lib/api/types';
+import EventCardReserveButton from './event-card-reserve-button';
 
 function formatEventDate(dateTime: string): string {
   const d = new Date(dateTime);
@@ -20,13 +13,7 @@ function formatEventDate(dateTime: string): string {
   });
 }
 
-function EventCard({
-  event,
-  isAuthenticated,
-}: {
-  event: EventItem;
-  isAuthenticated: boolean;
-}) {
+function EventCard({ event }: { event: EventItem }) {
   const remaining =
     event.remainingPlaces ?? Math.max(0, (event.capacity ?? 0) - (event.reservedCount ?? 0));
   const full = remaining <= 0;
@@ -52,77 +39,18 @@ function EventCard({
         </p>
       </div>
       <div className="flex flex-col gap-2">
-        {full ? (
-          <span className="rounded-lg border border-brand-deep/50 px-4 py-2 text-center text-sm text-white/60">
-            Complet
-          </span>
-        ) : isAuthenticated ? (
-          <Link
-            href={`/events/${event._id}`}
-            className="rounded-lg bg-brand-accent px-4 py-2 text-center text-sm font-medium text-white transition hover:bg-brand-mid"
-          >
-            Réserver
-          </Link>
-        ) : (
-          <Link
-            href="/login"
-            className="rounded-lg border border-brand-mid px-4 py-2 text-center text-sm font-medium text-brand-accent transition hover:bg-brand-deep/50"
-          >
-            Connectez-vous pour réserver
-          </Link>
-        )}
+        <EventCardReserveButton eventId={event._id} full={full} />
       </div>
     </article>
   );
 }
 
-export default function EventsList() {
-  const dispatch = useDispatch<AppDispatch>();
-  const { list, isLoading, error } = useSelector((state: RootState) => state.events);
-  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+type EventsListProps = {
+  initialEvents: EventItem[];
+  error?: string | null;
+};
 
-  useEffect(() => {
-    let cancelled = false;
-    dispatch(setLoading(true));
-    dispatch(setError(null));
-    eventsService
-      .findAll()
-      .then((data) => {
-        if (!cancelled) {
-          dispatch(setEvents(data));
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          dispatch(setError(err instanceof Error ? err.message : 'Erreur lors du chargement'));
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          dispatch(setLoading(false));
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [dispatch]);
-
-  if (isLoading) {
-    return (
-      <section className="mx-auto max-w-5xl px-6 py-12">
-        <h2 className="mb-8 text-2xl font-bold text-white">Événements à venir</h2>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-56 animate-pulse rounded-2xl border border-brand-deep/50 bg-brand-deep/20"
-            />
-          ))}
-        </div>
-      </section>
-    );
-  }
-
+export default function EventsList({ initialEvents, error }: EventsListProps) {
   if (error) {
     return (
       <section className="mx-auto max-w-5xl px-6 py-12">
@@ -134,7 +62,7 @@ export default function EventsList() {
     );
   }
 
-  if (list.length === 0) {
+  if (initialEvents.length === 0) {
     return (
       <section className="mx-auto max-w-5xl px-6 py-12">
         <h2 className="mb-8 text-2xl font-bold text-white">Événements à venir</h2>
@@ -149,12 +77,8 @@ export default function EventsList() {
     <section className="mx-auto max-w-5xl px-6 py-12">
       <h2 className="mb-8 text-2xl font-bold text-white">Événements à venir</h2>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {list.map((event) => (
-          <EventCard
-            key={event._id}
-            event={event}
-            isAuthenticated={isAuthenticated}
-          />
+        {initialEvents.map((event) => (
+          <EventCard key={event._id} event={event} />
         ))}
       </div>
     </section>

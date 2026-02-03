@@ -11,7 +11,6 @@ export const eventsService = {
   /** List published upcoming events (public). */
   async findAll(): Promise<EventItem[]> {
     const { data } = await api.get<EventItem[]>(EVENTS_BASE);
-    console.log(data);
     return data;
   },
 

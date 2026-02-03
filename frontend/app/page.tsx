@@ -1,7 +1,16 @@
 import Link from 'next/link';
+import { getEventsForServer } from '@/lib/api/server';
 import EventsList from './components/events-list';
 
-export default function HomePage() {
+export default async function HomePage() {
+  let initialEvents: Awaited<ReturnType<typeof getEventsForServer>> = [];
+  let eventsError: string | null = null;
+  try {
+    initialEvents = await getEventsForServer();
+  } catch (e) {
+    eventsError = e instanceof Error ? e.message : 'Erreur lors du chargement des événements';
+  }
+
   return (
     <div className="min-h-screen bg-brand-dark text-white">
       <header className="border-b border-brand-deep/50 px-6 py-4">
@@ -55,7 +64,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <EventsList />
+        <EventsList initialEvents={initialEvents} error={eventsError} />
 
         <section className="mx-auto mt-32 grid max-w-5xl gap-8 sm:grid-cols-3">
           <div className="rounded-2xl border border-brand-deep/50 bg-brand-deep/20 p-6 text-center">
