@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
+import { User } from '../users/schemas/user.schema';
 import { RegisterUserDto } from './dto/register-user.dto';
 
 @Injectable()
@@ -23,7 +24,7 @@ export class AuthService {
     return bcrypt.compare(password, hash);
   }
 
-  private generateToken(user: any) {
+  private generateToken(user: User) {
     const payload = {
       sub: user._id,
       email: user.email,
@@ -32,9 +33,15 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
-  private sanitizeUser(user: any) {
-    const { password, __v, ...safeUser } = user.toObject();
-    return safeUser;
+  private sanitizeUser(user: User): Omit<User, 'password'> {
+    const {
+      password: _password,
+      __v: _version,
+      ...safeUser
+    } = user.toObject() as Record<string, unknown>;
+    void _password;
+    void _version;
+    return safeUser as Omit<User, 'password'>;
   }
 
   async register(body: RegisterUserDto) {
@@ -71,7 +78,7 @@ export class AuthService {
     const token = this.generateToken(user);
 
     return {
-        sayhi: 'hello',
+      sayhi: 'hello',
       user: this.sanitizeUser(user),
       access_token: token,
     };

@@ -17,7 +17,11 @@ export class User extends Document {
   @Prop({ required: true })
   lastName: string;
 
-  @Prop({ required: true, enum: ['ADMIN', 'PARTICIPANT'], default: 'PARTICIPANT' })
+  @Prop({
+    required: true,
+    enum: ['ADMIN', 'PARTICIPANT'],
+    default: 'PARTICIPANT',
+  })
   role: Role;
 
   @Prop({ type: Date, default: Date.now })
