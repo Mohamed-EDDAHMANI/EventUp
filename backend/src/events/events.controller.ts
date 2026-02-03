@@ -14,6 +14,7 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('events')
 export class EventsController {
@@ -27,7 +28,9 @@ export class EventsController {
   }
 
   @Get()
+  @Public()
   findAll() {
+    console.log('findAll');
     return this.eventsService.findPublished();
   }
 
@@ -39,6 +42,7 @@ export class EventsController {
   }
 
   @Get(':id')
+  @Public()
   async findOne(@Param('id') id: string) {
     const event = await this.eventsService.findOne(id);
     const remainingPlaces = this.eventsService.remainingPlaces(event);
