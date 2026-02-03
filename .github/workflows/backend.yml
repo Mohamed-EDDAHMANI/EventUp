@@ -30,9 +30,21 @@ jobs:
         run: npm run lint
         working-directory: backend
 
-      - name: Run tests
+      - name: Run unit tests (Jest)
         run: npm run test
         working-directory: backend
+
+      - name: Run tests with coverage
+        run: npm run test:cov
+        working-directory: backend
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: backend-coverage
+          path: backend/coverage/
+          retention-days: 7
 
       - name: Build application
         run: npm run build
