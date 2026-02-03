@@ -12,6 +12,14 @@ services:
       MONGO_INITDB_DATABASE: eventup
     volumes:
       - mongo_data:/data/db
+    networks:
+      - eventup-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   backend:
     build: ./backend
@@ -25,9 +33,13 @@ services:
     ports:
       - "3001:3001"
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
     environment:
       MONGO_URI: mongodb://user:password@mongo:27017/eventup?authSource=admin
+      PORT: "3001"
+    networks:
+      - eventup-network
 
   frontend:
     build: ./frontend
@@ -39,6 +51,12 @@ services:
       - "3000:3000"
     depends_on:
       - backend
+    networks:
+      - eventup-network
+
+networks:
+  eventup-network:
+    driver: bridge
 
 volumes:
   mongo_data:
