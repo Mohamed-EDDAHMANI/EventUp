@@ -5,9 +5,9 @@ import {
   IsNumber,
   Min,
   IsDateString,
-  IsIn,
 } from 'class-validator';
 
+/** Création toujours en DRAFT ; le statut ne change que via publish() ou cancel(). */
 export class CreateEventDto {
   @IsString()
   @IsNotEmpty()
@@ -27,8 +27,4 @@ export class CreateEventDto {
   @IsNumber()
   @Min(1)
   capacity: number;
-
-  @IsOptional()
-  @IsIn(['DRAFT', 'PUBLISHED', 'CANCELLED'])
-  status?: 'DRAFT' | 'PUBLISHED' | 'CANCELLED';
 }

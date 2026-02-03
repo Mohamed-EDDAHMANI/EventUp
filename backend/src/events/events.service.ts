@@ -9,6 +9,23 @@ import { Event, EventStatus } from './schemas/event.schema';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 
+/**
+ * Logique des statuts Event :
+ * - DRAFT   : brouillon, modifiable ; visible uniquement par l'admin.
+ * - PUBLISHED : publié, visible par tous ; modifiable (date/lieu/capacity) ; peut être annulé.
+ * - CANCELLED : annulé, terminal ; plus modifiable ni publiable.
+ *
+ * Transitions autorisées :
+ *   DRAFT → PUBLISHED (publish)
+ *   DRAFT → CANCELLED (cancel)
+ *   PUBLISHED → CANCELLED (cancel)
+ */
+const ALLOWED_STATUS_TRANSITIONS: Record<EventStatus, EventStatus[] | null> = {
+  DRAFT: ['PUBLISHED', 'CANCELLED'],
+  PUBLISHED: ['CANCELLED'],
+  CANCELLED: null, // terminal
+};
+
 @Injectable()
 export class EventsService {
   constructor(@InjectModel(Event.name) private eventModel: Model<Event>) {}
@@ -17,6 +34,7 @@ export class EventsService {
     const event = new this.eventModel({
       ...createEventDto,
       dateTime: new Date(createEventDto.dateTime),
+      status: 'DRAFT' as EventStatus,
     });
     return event.save();
   }
@@ -47,13 +65,15 @@ export class EventsService {
         'Impossible de modifier un événement annulé',
       );
     }
-    if (updateEventDto.dateTime) {
-      (updateEventDto as { dateTime?: Date }).dateTime = new Date(
-        updateEventDto.dateTime,
-      );
+    const { status: _status, ...payload } = updateEventDto as UpdateEventDto & {
+      status?: EventStatus;
+    };
+    void _status;
+    if (payload.dateTime) {
+      (payload as { dateTime?: Date }).dateTime = new Date(payload.dateTime);
     }
     const updated = await this.eventModel
-      .findByIdAndUpdate(id, { $set: updateEventDto }, { new: true })
+      .findByIdAndUpdate(id, { $set: payload }, { new: true })
       .exec();
     if (!updated) {
       throw new NotFoundException(`Événement #${id} introuvable`);
@@ -62,6 +82,12 @@ export class EventsService {
   }
 
   async remove(id: string): Promise<void> {
+    const event = await this.findOne(id);
+    if (event.status !== 'DRAFT') {
+      throw new BadRequestException(
+        'Suppression autorisée uniquement pour un événement en brouillon. Utilisez "annuler" pour un événement publié.',
+      );
+    }
     const result = await this.eventModel.findByIdAndDelete(id).exec();
     if (!result) {
       throw new NotFoundException(`Événement #${id} introuvable`);
@@ -70,12 +96,12 @@ export class EventsService {
 
   async publish(id: string): Promise<Event> {
     const event = await this.findOne(id);
-    if (event.status === 'PUBLISHED') {
-      throw new BadRequestException('Cet événement est déjà publié');
-    }
-    if (event.status === 'CANCELLED') {
+    const allowed = ALLOWED_STATUS_TRANSITIONS[event.status];
+    if (!allowed?.includes('PUBLISHED')) {
       throw new BadRequestException(
-        'Impossible de publier un événement annulé',
+        event.status === 'PUBLISHED'
+          ? 'Cet événement est déjà publié'
+          : 'Impossible de publier un événement annulé',
       );
     }
     const updated = await this.eventModel
@@ -93,8 +119,13 @@ export class EventsService {
 
   async cancel(id: string): Promise<Event> {
     const event = await this.findOne(id);
-    if (event.status === 'CANCELLED') {
-      throw new BadRequestException('Cet événement est déjà annulé');
+    const allowed = ALLOWED_STATUS_TRANSITIONS[event.status];
+    if (!allowed?.includes('CANCELLED')) {
+      throw new BadRequestException(
+        event.status === 'CANCELLED'
+          ? 'Cet événement est déjà annulé'
+          : "Impossible d'annuler cet événement",
+      );
     }
     const updated = await this.eventModel
       .findByIdAndUpdate(
