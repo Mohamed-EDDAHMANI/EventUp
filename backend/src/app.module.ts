@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
+import { EventsModule } from './events/events.module';
 import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
@@ -16,6 +17,7 @@ import { MongooseModule } from '@nestjs/mongoose';
     }),
     MongooseModule.forRoot(process.env.MONGO_URI || ''),
     UsersModule,
+    EventsModule,
   ],
   controllers: [AppController],
   providers: [
