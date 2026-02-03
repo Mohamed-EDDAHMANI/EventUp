@@ -34,7 +34,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return {
       userId: p.sub,
       email: p.email,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- JWT payload shape asserted via JwtPayload
+
       role: p.role,
     };
   }
