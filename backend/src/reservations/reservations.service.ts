@@ -140,9 +140,11 @@ export class ReservationsService {
   }
 
   /**
-   * Génère le PDF billet pour une réservation confirmée (participant uniquement).
+   * Génère le PDF billet. Route sécurisée :
+   * - Réservation doit exister
+   * - L'utilisateur doit être le propriétaire de la réservation (403 sinon)
+   * - Le statut doit être CONFIRMED (400 sinon) : pas de téléchargement pour PENDING ou CANCELLED
    * @returns buffer et titre de l'événement (pour le nom du fichier)
-   * @throws BadRequestException si la réservation n'est pas confirmée
    */
   async getTicketPdf(id: string, userId: string): Promise<{ buffer: Buffer; eventTitle: string }> {
     const reservation = await this.reservationModel
