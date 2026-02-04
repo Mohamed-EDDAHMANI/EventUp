@@ -1,6 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useDispatch } from 'react-redux';
+import { clearCredentials } from '@/lib/slices/auth-slice';
+import { setAccessToken } from '@/lib/api';
 
 const navLinks = [
   { href: '/admin', label: 'Tableau de bord' },
@@ -10,6 +14,16 @@ const navLinks = [
 ];
 
 export default function AdminNav() {
+  const router = useRouter();
+  const dispatch = useDispatch();
+
+  const handleLogout = () => {
+    dispatch(clearCredentials());
+    setAccessToken(null);
+    router.push('/');
+    router.refresh();
+  };
+
   return (
     <nav className="flex flex-wrap items-center gap-2 border-b border-brand-deep/50 px-6 py-4">
       <Link
@@ -33,6 +47,13 @@ export default function AdminNav() {
       >
         ← Retour au site
       </Link>
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="rounded-lg bg-brand-accent px-3 py-2 text-sm font-medium text-white transition hover:bg-brand-mid"
+      >
+        Déconnexion
+      </button>
     </nav>
   );
 }
