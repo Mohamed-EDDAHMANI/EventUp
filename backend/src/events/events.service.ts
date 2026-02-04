@@ -144,6 +144,9 @@ export class EventsService {
     return Math.max(0, event.capacity - (event.reservedCount ?? 0));
   }
 
+  /**
+   * Incrémente reservedCount de 1. Lance une erreur si l'événement n'existe pas.
+   */
   async incrementReservedCount(eventId: string): Promise<void> {
     const result = await this.eventModel
       .findByIdAndUpdate(eventId, { $inc: { reservedCount: 1 } }, { new: true })
@@ -151,6 +154,25 @@ export class EventsService {
     if (!result) {
       throw new NotFoundException(`Événement #${eventId} introuvable`);
     }
+  }
+
+  /**
+   * Réserve une place de manière atomique : n'incrémente que si reservedCount < capacity.
+   * Évite la surréservation en cas de requêtes concurrentes.
+   * @returns true si une place a été réservée, false si capacité atteinte
+   */
+  async reservePlaceIfCapacity(eventId: string): Promise<boolean> {
+    const result = await this.eventModel
+      .findOneAndUpdate(
+        {
+          _id: eventId,
+          $expr: { $lt: [{ $ifNull: ['$reservedCount', 0] }, '$capacity'] },
+        },
+        { $inc: { reservedCount: 1 } },
+        { new: true },
+      )
+      .exec();
+    return result != null;
   }
 
   async decrementReservedCount(eventId: string): Promise<void> {

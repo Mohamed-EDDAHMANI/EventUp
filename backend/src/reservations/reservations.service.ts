@@ -19,6 +19,12 @@ export class ReservationsService {
     private readonly eventsService: EventsService,
   ) {}
 
+  /**
+   * Crée une réservation avec les règles de gestion :
+   * - Vérification capacité : l'événement doit avoir au moins une place (atomique en concurrence).
+   * - Pas de doublon : un seul réservation PENDING ou CONFIRMED par (événement, utilisateur).
+   * - Événement publié et à venir.
+   */
   async create(eventId: string, userId: string): Promise<Reservation> {
     const event = await this.eventsService.findOne(eventId) as Event & { reservedCount?: number };
     if (event.status !== 'PUBLISHED') {
@@ -29,10 +35,7 @@ export class ReservationsService {
     if (new Date(event.dateTime) < new Date()) {
       throw new BadRequestException("L'événement est déjà passé");
     }
-    const remaining = this.eventsService.remainingPlaces(event);
-    if (remaining <= 0) {
-      throw new BadRequestException("Plus de places disponibles");
-    }
+    // Doublon : une seule réservation active (PENDING ou CONFIRMED) par utilisateur et événement
     const existing = await this.reservationModel
       .findOne({
         event: eventId,
@@ -45,14 +48,22 @@ export class ReservationsService {
         "Vous avez déjà une réservation pour cet événement",
       );
     }
-    const reservation = new this.reservationModel({
-      event: eventId,
-      user: userId,
-      status: 'PENDING' as ReservationStatus,
-    });
-    const saved = await reservation.save();
-    await this.eventsService.incrementReservedCount(eventId);
-    return saved;
+    // Vérification capacité de manière atomique (évite surréservation en concurrence)
+    const placeReserved = await this.eventsService.reservePlaceIfCapacity(eventId);
+    if (!placeReserved) {
+      throw new BadRequestException("Plus de places disponibles");
+    }
+    try {
+      const reservation = new this.reservationModel({
+        event: eventId,
+        user: userId,
+        status: 'PENDING' as ReservationStatus,
+      });
+      return await reservation.save();
+    } catch (err) {
+      await this.eventsService.decrementReservedCount(eventId);
+      throw err;
+    }
   }
 
   async confirm(id: string, userId: string): Promise<Reservation> {
