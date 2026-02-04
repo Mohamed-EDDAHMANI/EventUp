@@ -11,12 +11,14 @@ import { CreateReservationDto } from './dto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { EventsService } from '../events/events.service';
 import { Event } from '../events/schemas/event.schema';
+import { PdfTicketService } from './pdf-ticket.service';
 
 @Injectable()
 export class ReservationsService {
   constructor(
     @InjectModel(Reservation.name) private reservationModel: Model<Reservation>,
     private readonly eventsService: EventsService,
+    private readonly pdfTicketService: PdfTicketService,
   ) {}
 
   /**
@@ -135,6 +137,61 @@ export class ReservationsService {
       .populate('user', 'email firstName lastName')
       .exec();
     return reservation!;
+  }
+
+  /**
+   * Génère le PDF billet pour une réservation confirmée (participant uniquement).
+   * @returns buffer et titre de l'événement (pour le nom du fichier)
+   * @throws BadRequestException si la réservation n'est pas confirmée
+   */
+  async getTicketPdf(id: string, userId: string): Promise<{ buffer: Buffer; eventTitle: string }> {
+    const reservation = await this.reservationModel
+      .findById(id)
+      .populate('event', 'title dateTime location')
+      .populate('user', 'email firstName lastName')
+      .exec();
+    if (!reservation) {
+      throw new NotFoundException(`Réservation #${id} introuvable`);
+    }
+    const ownerId =
+      typeof reservation.user === 'object' && reservation.user && '_id' in reservation.user
+        ? String((reservation.user as { _id: unknown })._id)
+        : String(reservation.user);
+    if (ownerId !== userId) {
+      throw new ForbiddenException("Cette réservation ne vous appartient pas");
+    }
+    if (reservation.status !== 'CONFIRMED') {
+      throw new BadRequestException(
+        'Le billet PDF est disponible uniquement pour les réservations confirmées par l\'administrateur.',
+      );
+    }
+    const event = reservation.event as unknown as { title: string; dateTime: Date; location: string };
+    const user = reservation.user as unknown as { email: string; firstName: string; lastName: string };
+    const eventDate = event?.dateTime
+      ? new Date(event.dateTime).toLocaleString('fr-FR', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : '–';
+    const participantName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || '–';
+    const confirmedAt = reservation.updatedAt
+      ? new Date(reservation.updatedAt).toLocaleDateString('fr-FR')
+      : undefined;
+    const eventTitle = event?.title ?? 'Événement';
+    const buffer = await this.pdfTicketService.generateTicket({
+      eventTitle,
+      eventDateTime: eventDate,
+      eventLocation: event?.location ?? '–',
+      participantName,
+      participantEmail: user?.email ?? '–',
+      reservationId: id,
+      confirmedAt,
+    });
+    return { buffer, eventTitle };
   }
 
   async findByUser(userId: string): Promise<Reservation[]> {

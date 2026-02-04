@@ -6,6 +6,7 @@ import {
   Param,
   Body,
   UseGuards,
+  StreamableFile,
 } from '@nestjs/common';
 import { ReservationsService } from './reservations.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
@@ -60,6 +61,24 @@ export class ReservationsController {
   @Roles('ADMIN')
   findByParticipantAdmin(@Param('userId') userId: string) {
     return this.reservationsService.findByUser(userId);
+  }
+
+  @Get('ticket/:id')
+  async getTicket(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserPayload,
+  ): Promise<StreamableFile> {
+    const { buffer, eventTitle } = await this.reservationsService.getTicketPdf(id, user.userId);
+    const safeName = eventTitle
+      .replace(/[/\\:*?"<>|]/g, '-')
+      .replace(/\s+/g, '-')
+      .slice(0, 100)
+      .trim() || 'billet-eventup';
+    const filename = `billet-${safeName}.pdf`;
+    return new StreamableFile(buffer, {
+      type: 'application/pdf',
+      disposition: `attachment; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
+    });
   }
 
   @Get(':id')
