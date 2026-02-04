@@ -63,6 +63,11 @@ export class ReservationsController {
     return this.reservationsService.findByUser(userId);
   }
 
+  /**
+   * Téléchargement du billet PDF.
+   * Sécurisé : authentification requise (JWT), propriétaire de la réservation uniquement,
+   * et statut CONFIRMED obligatoire (vérifié dans getTicketPdf).
+   */
   @Get('ticket/:id')
   async getTicket(
     @Param('id') id: string,
