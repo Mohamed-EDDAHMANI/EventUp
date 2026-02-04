@@ -1,5 +1,5 @@
 export { api, setAccessToken, getAccessToken } from './axios';
-export { authService, eventsService } from './services';
+export { authService, eventsService, reservationsService, adminService } from './services';
 export { mapApiUserToAuthUser } from './types';
 export type {
   ApiUser,
@@ -10,4 +10,8 @@ export type {
   EventStatus,
   CreateEventPayload,
   UpdateEventPayload,
+  ReservationItem,
+  ReservationStatus,
+  CreateReservationPayload,
+  UpdateReservationPayload,
 } from './types';

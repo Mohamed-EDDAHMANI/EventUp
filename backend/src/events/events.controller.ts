@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
+import { ReservationsService } from '../reservations/reservations.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -18,7 +19,10 @@ import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(
+    private readonly eventsService: EventsService,
+    private readonly reservationsService: ReservationsService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -30,7 +34,6 @@ export class EventsController {
   @Get()
   @Public()
   findAll() {
-    console.log('findAll');
     return this.eventsService.findPublished();
   }
 
@@ -39,6 +42,30 @@ export class EventsController {
   @Roles('ADMIN')
   findAllAdmin() {
     return this.eventsService.findAll();
+  }
+
+  @Get('admin/stats')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async getAdminStats() {
+    const [upcomingEvents, reservationsByStatus] = await Promise.all([
+      this.eventsService.findPublished(),
+      this.reservationsService.countByStatus(),
+    ]);
+    const totalCapacity = upcomingEvents.reduce((sum, e) => sum + (e.capacity ?? 0), 0);
+    const totalReserved = upcomingEvents.reduce(
+      (sum, e) => sum + (e.reservedCount ?? 0),
+      0,
+    );
+    const fillRate =
+      totalCapacity > 0 ? Math.round((totalReserved / totalCapacity) * 100) : 0;
+    return {
+      upcomingEventsCount: upcomingEvents.length,
+      fillRatePercent: fillRate,
+      totalCapacity,
+      totalReserved,
+      reservationsByStatus,
+    };
   }
 
   @Get(':id')

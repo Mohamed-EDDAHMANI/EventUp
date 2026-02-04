@@ -72,3 +72,23 @@ export type CreateEventPayload = {
 };
 
 export type UpdateEventPayload = Partial<CreateEventPayload>;
+
+// Reservations
+export type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED';
+
+export type ReservationItem = {
+  _id: string;
+  event: string | EventItem;
+  user: string | ApiUser;
+  status: ReservationStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateReservationPayload = {
+  eventId: string;
+};
+
+export type UpdateReservationPayload = {
+  status?: ReservationStatus;
+};

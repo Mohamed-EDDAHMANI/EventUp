@@ -2,13 +2,16 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppDispatch } from '@/lib/hooks';
 import { setCredentials } from '@/lib/slices/auth-slice';
 import { authService, setAccessToken, mapApiUserToAuthUser } from '@/lib/api';
+import ErrorAlert from '@/app/components/error-alert';
+import HeaderAuthLinks from '@/app/components/header-auth-links';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,7 +31,10 @@ export default function LoginPage() {
         }),
       );
       setAccessToken(res.access_token);
-      router.push('/');
+      const redirect = searchParams.get('redirect');
+      const target =
+        redirect && redirect.startsWith('/') ? redirect : res.user.role === 'ADMIN' ? '/admin' : '/';
+      router.push(target);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Connexion impossible');
@@ -44,12 +50,7 @@ export default function LoginPage() {
           <Link href="/" className="text-xl font-bold tracking-tight text-white">
             EventUP
           </Link>
-          <Link
-            href="/register"
-            className="rounded-lg px-4 py-2 text-brand-accent transition hover:bg-brand-deep/50"
-          >
-            S&apos;inscrire
-          </Link>
+          <HeaderAuthLinks />
         </nav>
       </header>
 
@@ -62,12 +63,10 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {error && (
-              <div
-                role="alert"
-                className="rounded-lg bg-red-500/20 px-4 py-3 text-sm text-red-200"
-              >
-                {error}
-              </div>
+              <ErrorAlert
+                message={error}
+                onDismiss={() => setError('')}
+              />
             )}
             <div>
               <label htmlFor="email" className="mb-1 block text-sm font-medium">
