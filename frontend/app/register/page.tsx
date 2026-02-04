@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/lib/hooks';
 import { setCredentials } from '@/lib/slices/auth-slice';
 import { authService, setAccessToken, mapApiUserToAuthUser } from '@/lib/api';
+import ErrorAlert from '@/app/components/error-alert';
+import HeaderAuthLinks from '@/app/components/header-auth-links';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -51,12 +53,7 @@ export default function RegisterPage() {
           <Link href="/" className="text-xl font-bold tracking-tight text-white">
             EventUP
           </Link>
-          <Link
-            href="/login"
-            className="rounded-lg px-4 py-2 text-brand-accent transition hover:bg-brand-deep/50"
-          >
-            Connexion
-          </Link>
+          <HeaderAuthLinks />
         </nav>
       </header>
 
@@ -69,12 +66,10 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {error && (
-              <div
-                role="alert"
-                className="rounded-lg bg-red-500/20 px-4 py-3 text-sm text-red-200"
-              >
-                {error}
-              </div>
+              <ErrorAlert
+                message={error}
+                onDismiss={() => setError('')}
+              />
             )}
             <div className="grid grid-cols-2 gap-4">
               <div>

@@ -143,4 +143,25 @@ export class EventsService {
   remainingPlaces(event: Event): number {
     return Math.max(0, event.capacity - (event.reservedCount ?? 0));
   }
+
+  async incrementReservedCount(eventId: string): Promise<void> {
+    const result = await this.eventModel
+      .findByIdAndUpdate(eventId, { $inc: { reservedCount: 1 } }, { new: true })
+      .exec();
+    if (!result) {
+      throw new NotFoundException(`Événement #${eventId} introuvable`);
+    }
+  }
+
+  async decrementReservedCount(eventId: string): Promise<void> {
+    const event = await this.findOne(eventId);
+    const current = event.reservedCount ?? 0;
+    if (current <= 0) return;
+    const result = await this.eventModel
+      .findByIdAndUpdate(eventId, { $inc: { reservedCount: -1 } }, { new: true })
+      .exec();
+    if (!result) {
+      throw new NotFoundException(`Événement #${eventId} introuvable`);
+    }
+  }
 }
