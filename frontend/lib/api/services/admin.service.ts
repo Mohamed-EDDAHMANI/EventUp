@@ -8,11 +8,23 @@ export type AdminStats = {
   reservationsByStatus: { PENDING: number; CONFIRMED: number; CANCELLED: number };
 };
 
+export type ParticipantOption = {
+  _id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+};
+
 // Stats are served under events controller (GET /events/admin/stats)
 const STATS_URL = '/events/admin/stats';
 
 export const adminService = {
   getStats(): Promise<AdminStats> {
     return api.get<AdminStats>(STATS_URL).then((r) => r.data);
+  },
+
+  /** Liste des participants (pour formulaire de réservation admin). */
+  getParticipants(): Promise<ParticipantOption[]> {
+    return api.get<ParticipantOption[]>('/users/participants').then((r) => r.data);
   },
 };

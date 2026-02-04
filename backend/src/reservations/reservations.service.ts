@@ -66,6 +66,13 @@ export class ReservationsService {
     }
   }
 
+  /**
+   * Admin : crée une réservation pour un participant (mêmes règles de gestion que create).
+   */
+  async createForParticipant(eventId: string, userId: string): Promise<Reservation> {
+    return this.create(eventId, userId);
+  }
+
   async confirm(id: string, userId: string): Promise<Reservation> {
     const reservation = await this.findOne(id);
     if (reservation.user.toString() !== userId) {

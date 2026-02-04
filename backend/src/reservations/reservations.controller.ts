@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ReservationsService } from './reservations.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
+import { AdminCreateReservationDto } from './dto/admin-create-reservation.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -31,6 +32,13 @@ export class ReservationsController {
   @Get('me')
   findMyReservations(@CurrentUser() user: CurrentUserPayload) {
     return this.reservationsService.findByUser(user.userId);
+  }
+
+  @Post('admin/create')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  adminCreate(@Body() dto: AdminCreateReservationDto) {
+    return this.reservationsService.createForParticipant(dto.eventId, dto.userId);
   }
 
   @Get('admin')

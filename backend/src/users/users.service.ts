@@ -19,7 +19,16 @@ export class UsersService {
   }
 
   findAll() {
-    return `This action returns all users`;
+    return this.userModel.find().select('-password').exec();
+  }
+
+  /** Liste des participants (role PARTICIPANT) pour l’admin (sélection dans formulaire réservation). */
+  findParticipants() {
+    return this.userModel
+      .find({ role: 'PARTICIPANT' })
+      .select('_id email firstName lastName')
+      .sort({ lastName: 1, firstName: 1 })
+      .exec();
   }
 
   findOne(id: number) {
