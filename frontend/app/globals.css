@@ -1,26 +1,28 @@
 @import "tailwindcss";
 
+/* EventUP brand palette */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --brand-dark: #141010;
+  --brand-deep: #680747;
+  --brand-mid: #c3195d;
+  --brand-accent: #f70776;
+  --background: var(--brand-dark);
+  --foreground: #fafafa;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-mid: var(--brand-mid);
+  --color-brand-accent: var(--brand-accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }

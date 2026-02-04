@@ -1,0 +1,62 @@
+version: '3.8'
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: eventup-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: eventup
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - eventup-network
+    healthcheck:
+      test: ["CMD", "mongosh", "-u", "admin", "-p", "admin123", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 25s
+
+  backend:
+    build: ./backend
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    container_name: eventup-backend
+    restart: always
+    env_file:
+      - ./backend/.env
+    ports:
+      - "3001:3001"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      MONGO_URI: mongodb://admin:admin123@mongo:27017/eventup?authSource=admin
+      PORT: "3001"
+    networks:
+      - eventup-network
+
+  frontend:
+    build: ./frontend
+    container_name: eventup-frontend
+    restart: always
+    env_file:
+      - ./frontend/.env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - eventup-network
+
+networks:
+  eventup-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
