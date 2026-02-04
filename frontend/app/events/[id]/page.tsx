@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 import { getEventForServer } from '@/lib/api/server';
 import EventDetailReserve from '@/app/components/event-detail-reserve';
+import HeaderAuthLinks from '@/app/components/header-auth-links';
 
 function formatEventDate(dateTime: string): string {
   const d = new Date(dateTime);
@@ -18,6 +20,22 @@ function formatEventDate(dateTime: string): string {
 type PageProps = {
   params: Promise<{ id: string }>;
 };
+
+/**
+ * PARTICIPANT: Consulte le détail d'un événement.
+ * This page is a Server Component (SSR): event data is fetched on the server.
+ */
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const event = await getEventForServer(id);
+  if (!event) return { title: 'Événement introuvable | EventUP' };
+  return {
+    title: `${event.title} | EventUP`,
+    description: event.description
+      ? event.description.slice(0, 160)
+      : `Événement le ${formatEventDate(event.dateTime)} à ${event.location}.`,
+  };
+}
 
 export default async function EventDetailPage({ params }: PageProps) {
   const { id } = await params;
@@ -48,18 +66,7 @@ export default async function EventDetailPage({ params }: PageProps) {
             >
               ← Retour aux événements
             </Link>
-            <Link
-              href="/login"
-              className="rounded-lg px-4 py-2 text-brand-accent transition hover:bg-brand-deep/50 hover:text-white"
-            >
-              Connexion
-            </Link>
-            <Link
-              href="/register"
-              className="rounded-lg bg-brand-accent px-4 py-2 font-medium text-white transition hover:bg-brand-mid"
-            >
-              S&apos;inscrire
-            </Link>
+            <HeaderAuthLinks />
           </div>
         </nav>
       </header>
@@ -103,7 +110,11 @@ export default async function EventDetailPage({ params }: PageProps) {
             </div>
           </dl>
 
-          <EventDetailReserve eventId={event._id} full={full} />
+          <EventDetailReserve
+            eventId={event._id}
+            full={full}
+            cancelled={event.status === 'CANCELLED'}
+          />
         </article>
       </main>
     </div>

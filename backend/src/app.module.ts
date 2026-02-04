@@ -7,6 +7,8 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { EventsModule } from './events/events.module';
+import { ReservationsModule } from './reservations/reservations.module';
+import { AdminModule } from './admin/admin.module';
 import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
@@ -18,6 +20,8 @@ import { MongooseModule } from '@nestjs/mongoose';
     MongooseModule.forRoot(process.env.MONGO_URI || ''),
     UsersModule,
     EventsModule,
+    ReservationsModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
