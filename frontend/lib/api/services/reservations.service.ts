@@ -38,6 +38,13 @@ export const reservationsService = {
     return api.patch<ReservationItem>(`${RESERVATIONS_BASE}/${id}`, payload).then((r) => r.data);
   },
 
+  /** Admin: create a reservation for a participant. */
+  adminCreate(payload: { eventId: string; userId: string }): Promise<ReservationItem> {
+    return api
+      .post<ReservationItem>(`${RESERVATIONS_BASE}/admin/create`, payload)
+      .then((r) => r.data);
+  },
+
   /** Admin: list all reservations. */
   findAllAdmin(): Promise<ReservationItem[]> {
     return api.get<ReservationItem[]>(`${RESERVATIONS_BASE}/admin`).then((r) => r.data);
