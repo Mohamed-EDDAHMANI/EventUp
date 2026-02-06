@@ -10,7 +10,7 @@ import {
   type PersistConfig,
   type Storage,
 } from 'redux-persist';
-import authReducer from '@/lib/slices/auth-slice';
+import authReducer, { type AuthState } from '@/lib/slices/auth-slice';
 import eventsReducer from '@/lib/slices/events-slice';
 
 /** No-op storage for SSR so persist config is valid when module loads on server. */
@@ -26,7 +26,7 @@ function getStorage(): Storage {
   return require('redux-persist/lib/storage').default;
 }
 
-const authPersistConfig: PersistConfig<{ user: unknown; accessToken: string | null; isAuthenticated: boolean }> = {
+const authPersistConfig: PersistConfig<AuthState> = {
   key: 'eventup-auth',
   storage: getStorage(),
   whitelist: ['user', 'accessToken', 'isAuthenticated'],
