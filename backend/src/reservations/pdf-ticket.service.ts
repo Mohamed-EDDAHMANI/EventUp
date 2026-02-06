@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
 
-// pdfkit is CommonJS; require() avoids "Cannot find module 'pdfkit'" at compile time
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const PDFDocument = require('pdfkit') as new (options?: { size?: string; margin?: number }) => PDFKit.PDFDocument;
-
-// Minimal type for the PDF document instance (avoids depending on @types/pdfkit resolution)
-declare namespace PDFKit {
-  interface PDFDocument {
-    on(event: string, fn: (...args: unknown[]) => void): void;
-    font(font: string): PDFDocument;
-    fontSize(size: number): PDFDocument;
-    text(text: string, opts?: { align?: string }): PDFDocument;
-    moveDown(n?: number): PDFDocument;
-    fillColor(color: string): PDFDocument;
-    end(): void;
-  }
+/** Minimal type for pdfkit document instance (ES module alternative to namespace) */
+interface PDFDocumentInstance {
+  on(event: string, fn: (...args: unknown[]) => void): void;
+  font(font: string): PDFDocumentInstance;
+  fontSize(size: number): PDFDocumentInstance;
+  text(text: string, opts?: { align?: string }): PDFDocumentInstance;
+  moveDown(n?: number): PDFDocumentInstance;
+  fillColor(color: string): PDFDocumentInstance;
+  end(): void;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- pdfkit is CommonJS
+const PDFDocument = require('pdfkit') as new (options?: {
+  size?: string;
+  margin?: number;
+}) => PDFDocumentInstance;
 
 export type TicketData = {
   eventTitle: string;

@@ -7,7 +7,6 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Reservation, ReservationStatus } from './schemas/reservation.schema';
-import { CreateReservationDto } from './dto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { EventsService } from '../events/events.service';
 import { Event } from '../events/schemas/event.schema';
