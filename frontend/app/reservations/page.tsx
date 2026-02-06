@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useSelector } from 'react-redux';
-import type { RootState } from '@/lib/store';
+import { useAppSelector } from '@/lib/hooks';
 import { reservationsService } from '@/lib/api/services/reservations.service';
 import type { ReservationItem } from '@/lib/api/types';
 import ErrorAlert from '@/app/components/error-alert';
@@ -56,7 +55,7 @@ const statusLabels: Record<string, string> = {
 
 export default function ReservationsPage() {
   const router = useRouter();
-  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  const isAuthenticated = useAppSelector((state) => !!state.auth.isAuthenticated);
   const [list, setList] = useState<ReservationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

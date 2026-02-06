@@ -3,7 +3,7 @@ import type { EventItem } from '@/lib/api/types';
 
 export type { EventItem } from '@/lib/api/types';
 
-type EventsState = {
+export type EventsState = {
   list: EventItem[];
   selectedId: string | null;
   isLoading: boolean;
