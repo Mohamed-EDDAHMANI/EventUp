@@ -23,7 +23,7 @@ export default function EventDetailReserve({ eventId, full, cancelled }: Props) 
 
   useEffect(() => {
     if (!isAuthenticated) {
-      setHasReserved(false);
+      queueMicrotask(() => setHasReserved(false));
       return;
     }
     reservationsService

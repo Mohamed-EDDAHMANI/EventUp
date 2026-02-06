@@ -80,8 +80,16 @@ export default function ReservationsPage() {
       router.replace('/login?redirect=/reservations');
       return;
     }
-    setLoading(true);
-    fetchReservations();
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setLoading(true);
+    });
+    reservationsService
+      .findMyReservations()
+      .then((data) => { if (!cancelled) setList(data); })
+      .catch((err) => { if (!cancelled) setError(err?.message ?? 'Erreur'); })
+      .finally(() => { if (!cancelled) { setLoading(false); setRefreshing(false); } });
+    return () => { cancelled = true; };
   }, [isAuthenticated, router]);
 
   const handleRefresh = () => {

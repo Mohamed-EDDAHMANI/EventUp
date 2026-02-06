@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useState } from 'react';
 import { Provider } from 'react-redux';
 import { persistStore } from 'redux-persist';
 import { PersistGate } from 'redux-persist/integration/react';
@@ -17,22 +17,14 @@ export default function StoreProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const storeRef = useRef<AppStore | null>(null);
-  const persistorRef = useRef<ReturnType<typeof persistStore> | null>(null);
-
-  if (!storeRef.current) {
-    storeRef.current = makeStore();
-    persistorRef.current = persistStore(storeRef.current);
-  }
-
-  const store = storeRef.current;
-  const persistor = persistorRef.current;
+  const [store] = useState<AppStore>(() => makeStore());
+  const [persistor] = useState(() => persistStore(store));
 
   return (
     <Provider store={store}>
       <PersistGate
         loading={null}
-        persistor={persistor!}
+        persistor={persistor}
         onBeforeLift={() => {
           const state = store.getState();
           if (state.auth.accessToken) {
