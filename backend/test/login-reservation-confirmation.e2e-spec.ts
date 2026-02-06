@@ -1,12 +1,17 @@
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { AppModule } from '../src/app.module';
+
+type AuthResponse = { access_token: string };
+type EventResponse = { _id: string };
+type ReservationResponse = { _id: string; status: string };
 
 describe('Connexion -> Réservation -> Confirmation (e2e)', () => {
   let app: INestApplication;
   let mongod: MongoMemoryServer;
+  let server: ReturnType<INestApplication['getHttpServer']>;
 
   const admin = {
     email: 'admin@eventup.test',
@@ -35,11 +40,15 @@ describe('Connexion -> Réservation -> Confirmation (e2e)', () => {
   beforeAll(async () => {
     mongod = await MongoMemoryServer.create();
     process.env.MONGO_URI = mongod.getUri();
-    process.env.JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || 'e2e-test-secret';
+    process.env.JWT_SECRET_KEY =
+      process.env.JWT_SECRET_KEY || 'e2e-test-secret';
 
-    const { AppModule } = require('../src/app.module');
+    // Load after env is set; require needed so module sees process.env.MONGO_URI
+    const { AppModule: App } = require('../src/app.module') as {
+      AppModule: unknown;
+    };
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [App],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -52,6 +61,7 @@ describe('Connexion -> Réservation -> Confirmation (e2e)', () => {
       }),
     );
     await app.init();
+    server = app.getHttpServer() as ReturnType<INestApplication['getHttpServer']>;
   }, 30000);
 
   afterAll(async () => {
@@ -60,52 +70,55 @@ describe('Connexion -> Réservation -> Confirmation (e2e)', () => {
   });
 
   it('full flow: register -> login -> create event -> publish -> reserve -> admin confirm', async () => {
-    const server = app.getHttpServer();
+    const req = request(server as Parameters<typeof request>[0]);
 
-    await request(server).post('/auth/register').send(admin).expect(201);
-    const adminLogin = await request(server)
+    await req.post('/auth/register').send(admin).expect(201);
+    const adminLogin = await req
       .post('/auth/login')
       .send({ email: admin.email, password: admin.password })
       .expect(201);
-    const adminToken = adminLogin.body.access_token;
+    const adminToken = (adminLogin.body as AuthResponse).access_token;
 
-    await request(server).post('/auth/register').send(participant).expect(201);
-    const participantLogin = await request(server)
+    await req.post('/auth/register').send(participant).expect(201);
+    const participantLogin = await req
       .post('/auth/login')
       .send({ email: participant.email, password: participant.password })
       .expect(201);
-    const participantToken = participantLogin.body.access_token;
+    const participantToken = (participantLogin.body as AuthResponse)
+      .access_token;
 
-    const eventRes = await request(server)
+    const eventRes = await req
       .post('/events')
       .set('Authorization', `Bearer ${adminToken}`)
       .send(eventDto)
       .expect(201);
-    const eventId = eventRes.body._id;
+    const eventId = (eventRes.body as EventResponse)._id;
 
-    await request(server)
+    await req
       .post(`/events/${eventId}/publish`)
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(201);
 
-    const reservationRes = await request(server)
+    const reservationRes = await req
       .post('/reservations')
       .set('Authorization', `Bearer ${participantToken}`)
       .send({ eventId })
       .expect(201);
-    expect(reservationRes.body.status).toBe('PENDING');
+    const reservationBody = reservationRes.body as ReservationResponse;
+    expect(reservationBody.status).toBe('PENDING');
 
-    const confirmRes = await request(server)
-      .post(`/reservations/${reservationRes.body._id}/admin/confirm`)
+    const confirmRes = await req
+      .post(`/reservations/${reservationBody._id}/admin/confirm`)
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(201);
-    expect(confirmRes.body.status).toBe('CONFIRMED');
+    expect((confirmRes.body as ReservationResponse).status).toBe('CONFIRMED');
 
-    const meRes = await request(server)
+    const meRes = await req
       .get('/reservations/me')
       .set('Authorization', `Bearer ${participantToken}`)
       .expect(200);
-    expect(meRes.body).toHaveLength(1);
-    expect(meRes.body[0].status).toBe('CONFIRMED');
+    const meBody = meRes.body as ReservationResponse[];
+    expect(meBody).toHaveLength(1);
+    expect(meBody[0].status).toBe('CONFIRMED');
   });
 });
