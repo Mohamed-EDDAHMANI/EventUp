@@ -8,7 +8,7 @@ export type AuthUser = {
   lastName?: string;
 };
 
-type AuthState = {
+export type AuthState = {
   user: AuthUser | null;
   accessToken: string | null;
   isAuthenticated: boolean;

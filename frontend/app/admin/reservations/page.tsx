@@ -67,7 +67,10 @@ export default function AdminReservationsPage() {
 
   useEffect(() => {
     eventsService.findAllAdmin().then(setEvents).catch(() => setEvents([]));
-    adminService.getParticipants().then(setParticipants).catch(() => setParticipants([]));
+    adminService
+      .getParticipants()
+      .then((data) => setParticipants(Array.isArray(data) ? data : []))
+      .catch(() => setParticipants([]));
   }, []);
 
   const runAction = (
@@ -165,7 +168,7 @@ export default function AdminReservationsPage() {
               }`}
             >
               <option value="">-- Choisir un participant --</option>
-              {participants.map((p) => (
+              {(Array.isArray(participants) ? participants : []).map((p) => (
                 <option key={p._id} value={p._id}>
                   {p.firstName} {p.lastName} — {p.email}
                 </option>

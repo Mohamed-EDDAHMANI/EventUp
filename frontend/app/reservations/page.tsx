@@ -62,6 +62,7 @@ export default function ReservationsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [downloadingTicketId, setDownloadingTicketId] = useState<string | null>(null);
 
   const fetchReservations = () => {
     if (!isAuthenticated) return;
@@ -88,6 +89,15 @@ export default function ReservationsPage() {
     setRefreshing(true);
     setError(null);
     fetchReservations();
+  };
+
+  const handleDownloadTicket = (id: string, eventTitle?: string) => {
+    setDownloadingTicketId(id);
+    setError(null);
+    reservationsService
+      .downloadTicketPdf(id, eventTitle)
+      .catch((err) => setError(err?.message ?? 'Impossible de télécharger le billet.'))
+      .finally(() => setDownloadingTicketId(null));
   };
 
   const handleCancel = (id: string) => {
@@ -177,8 +187,20 @@ export default function ReservationsPage() {
                 {getEventPlaces(res) != null && (
                   <p className="text-sm text-white/60">Places : {getEventPlaces(res)}</p>
                 )}
-                {res.status !== 'CANCELLED' && (
-                  <div className="mt-4">
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {res.status === 'CONFIRMED' && (
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadTicket(res._id, getEventTitle(res))}
+                      disabled={downloadingTicketId === res._id}
+                      className="rounded-lg bg-green-600/80 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-600 disabled:opacity-50"
+                    >
+                      {downloadingTicketId === res._id
+                        ? 'Téléchargement...'
+                        : 'Télécharger le billet PDF'}
+                    </button>
+                  )}
+                  {res.status !== 'CANCELLED' && (
                     <button
                       type="button"
                       onClick={() => handleCancel(res._id)}
@@ -187,8 +209,8 @@ export default function ReservationsPage() {
                     >
                       {cancellingId === res._id ? 'Annulation...' : 'Annuler la réservation'}
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </li>
             ))}
           </ul>

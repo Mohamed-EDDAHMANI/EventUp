@@ -23,6 +23,46 @@ export const reservationsService = {
     return api.get<ReservationItem>(`${RESERVATIONS_BASE}/${id}`).then((r) => r.data);
   },
 
+  /**
+   * Télécharge le billet PDF (réservation confirmée uniquement).
+   * eventTitle optionnel : si fourni, utilisé pour le nom du fichier (sinon lecture du header Content-Disposition).
+   */
+  async downloadTicketPdf(id: string, eventTitle?: string): Promise<void> {
+    const res = await api.get<Blob>(`${RESERVATIONS_BASE}/ticket/${id}`, {
+      responseType: 'blob',
+    });
+    let filename = `billet-eventup-${id}.pdf`;
+    if (eventTitle?.trim()) {
+      const safe = eventTitle
+        .replace(/[/\\:*?"<>|]/g, '-')
+        .replace(/\s+/g, '-')
+        .slice(0, 100)
+        .trim();
+      if (safe) filename = `billet-${safe}.pdf`;
+    } else {
+      const disposition = res.headers['content-disposition'];
+      if (typeof disposition === 'string') {
+        const matchUtf8 = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+        const match = disposition.match(/filename=["']?([^"';]+)["']?/i);
+        if (matchUtf8) {
+          try {
+            filename = decodeURIComponent(matchUtf8[1].trim());
+          } catch {
+            // keep default
+          }
+        } else if (match) {
+          filename = match[1].trim();
+        }
+      }
+    }
+    const url = URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+
   /** Confirm a PENDING reservation. */
   confirm(id: string): Promise<ReservationItem> {
     return api.post<ReservationItem>(`${RESERVATIONS_BASE}/${id}/confirm`).then((r) => r.data);
