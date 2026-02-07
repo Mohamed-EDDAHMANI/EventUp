@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
 
-// pdfkit is CommonJS; require() avoids "Cannot find module 'pdfkit'" at compile time
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const PDFDocument = require('pdfkit') as new (options?: { size?: string; margin?: number }) => PDFKit.PDFDocument;
-
-// Minimal type for the PDF document instance (avoids depending on @types/pdfkit resolution)
-declare namespace PDFKit {
-  interface PDFDocument {
-    on(event: string, fn: (...args: unknown[]) => void): void;
-    font(font: string): PDFDocument;
-    fontSize(size: number): PDFDocument;
-    text(text: string, opts?: { align?: string }): PDFDocument;
-    moveDown(n?: number): PDFDocument;
-    fillColor(color: string): PDFDocument;
-    end(): void;
-  }
+/** Minimal type for pdfkit document instance (ES module alternative to namespace) */
+interface PDFDocumentInstance {
+  on(event: string, fn: (...args: unknown[]) => void): void;
+  font(font: string): PDFDocumentInstance;
+  fontSize(size: number): PDFDocumentInstance;
+  text(text: string, opts?: { align?: string }): PDFDocumentInstance;
+  moveDown(n?: number): PDFDocumentInstance;
+  fillColor(color: string): PDFDocumentInstance;
+  end(): void;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- pdfkit is CommonJS
+const PDFDocument = require('pdfkit') as new (options?: {
+  size?: string;
+  margin?: number;
+}) => PDFDocumentInstance;
 
 export type TicketData = {
   eventTitle: string;
@@ -41,9 +41,15 @@ export class PdfTicketService {
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
 
-      doc.fontSize(18).font('Helvetica-Bold').text('EventUP', { align: 'center' });
+      doc
+        .fontSize(18)
+        .font('Helvetica-Bold')
+        .text('EventUP', { align: 'center' });
       doc.moveDown(0.5);
-      doc.fontSize(10).font('Helvetica').text('Billet de réservation confirmée', { align: 'center' });
+      doc
+        .fontSize(10)
+        .font('Helvetica')
+        .text('Billet de réservation confirmée', { align: 'center' });
       doc.moveDown(1.5);
 
       doc.font('Helvetica-Bold').fontSize(14).text(data.eventTitle);
@@ -60,14 +66,22 @@ export class PdfTicketService {
       doc.text(`Email : ${data.participantEmail}`);
       doc.moveDown(1);
 
-      doc.fontSize(9).fillColor('#666').text(`Réservation #${data.reservationId}`, { align: 'center' });
+      doc
+        .fontSize(9)
+        .fillColor('#666')
+        .text(`Réservation #${data.reservationId}`, { align: 'center' });
       if (data.confirmedAt) {
         doc.text(`Confirmée le ${data.confirmedAt}`, { align: 'center' });
       }
       doc.moveDown(0.5);
-      doc.fontSize(8).text('Ce billet est valable sur présentation à l\'entrée de l\'événement.', {
-        align: 'center',
-      });
+      doc
+        .fontSize(8)
+        .text(
+          "Ce billet est valable sur présentation à l'entrée de l'événement.",
+          {
+            align: 'center',
+          },
+        );
 
       doc.end();
     });

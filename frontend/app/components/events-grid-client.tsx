@@ -35,7 +35,7 @@ export default function EventsGridClient({ initialEvents }: EventsGridClientProp
 
   useEffect(() => {
     if (!isAuthenticated) {
-      setReservedEventIds(new Set());
+      queueMicrotask(() => setReservedEventIds(new Set()));
       return;
     }
     reservationsService

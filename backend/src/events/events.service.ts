@@ -180,7 +180,11 @@ export class EventsService {
     const current = event.reservedCount ?? 0;
     if (current <= 0) return;
     const result = await this.eventModel
-      .findByIdAndUpdate(eventId, { $inc: { reservedCount: -1 } }, { new: true })
+      .findByIdAndUpdate(
+        eventId,
+        { $inc: { reservedCount: -1 } },
+        { new: true },
+      )
       .exec();
     if (!result) {
       throw new NotFoundException(`Événement #${eventId} introuvable`);

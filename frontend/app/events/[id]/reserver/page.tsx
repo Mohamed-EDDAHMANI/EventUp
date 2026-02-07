@@ -22,18 +22,28 @@ export default function ReserverPage() {
       return;
     }
     if (!eventId) return;
-    setStatus('loading');
-    setMessage('');
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) {
+        setStatus('loading');
+        setMessage('');
+      }
+    });
     reservationsService
       .create({ eventId })
       .then(() => {
-        setStatus('success');
-        setMessage('Votre réservation a bien été enregistrée (statut : En attente).');
+        if (!cancelled) {
+          setStatus('success');
+          setMessage('Votre réservation a bien été enregistrée (statut : En attente).');
+        }
       })
       .catch((err) => {
-        setStatus('error');
-        setMessage(err?.message ?? 'Impossible de créer la réservation.');
+        if (!cancelled) {
+          setStatus('error');
+          setMessage(err?.message ?? 'Impossible de créer la réservation.');
+        }
       });
+    return () => { cancelled = true; };
   }, [eventId, isAuthenticated, router]);
 
   if (!isAuthenticated) {

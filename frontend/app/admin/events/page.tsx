@@ -28,6 +28,16 @@ export default function AdminEventsPage() {
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  useEffect(() => {
+    let cancelled = false;
+    eventsService
+      .findAllAdmin()
+      .then((data) => { if (!cancelled) setEvents(data); })
+      .catch((e) => { if (!cancelled) setError(e?.message ?? 'Erreur'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
   const load = () => {
     setLoading(true);
     eventsService
@@ -36,8 +46,6 @@ export default function AdminEventsPage() {
       .catch((e) => setError(e?.message ?? 'Erreur'))
       .finally(() => setLoading(false));
   };
-
-  useEffect(() => load(), []);
 
   const handlePublish = (id: string) => {
     setActionLoading(id);
@@ -88,8 +96,6 @@ export default function AdminEventsPage() {
 
       <div className="space-y-4">
         {events.map((event) => {
-          const remaining =
-            (event.capacity ?? 0) - (event.reservedCount ?? 0);
           const busy = actionLoading === event._id;
           return (
             <div

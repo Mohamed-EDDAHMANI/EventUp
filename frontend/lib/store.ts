@@ -11,7 +11,7 @@ import {
   type Storage,
 } from 'redux-persist';
 import authReducer, { type AuthState } from '@/lib/slices/auth-slice';
-import eventsReducer from '@/lib/slices/events-slice';
+import eventsReducer, { type EventsState } from '@/lib/slices/events-slice';
 
 /** No-op storage for SSR so persist config is valid when module loads on server. */
 const noopStorage: Storage = {
@@ -58,5 +58,5 @@ export const makeStore = () => {
 };
 
 export type AppStore = ReturnType<typeof makeStore>;
-export type RootState = ReturnType<AppStore['getState']>;
+export type RootState = { auth: AuthState; events: EventsState };
 export type AppDispatch = AppStore['dispatch'];

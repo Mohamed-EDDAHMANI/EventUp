@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { eventsService } from '@/lib/api/services/events.service';
-import type { EventItem } from '@/lib/api/types';
 import ErrorAlert from '@/app/components/error-alert';
 
 export default function AdminEditEventPage() {
