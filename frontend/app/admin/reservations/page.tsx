@@ -63,7 +63,20 @@ export default function AdminReservationsPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => load(), []);
+  useEffect(() => {
+    let cancelled = false;
+    reservationsService
+      .findAllAdmin()
+      .then((data) => {
+        if (!cancelled) {
+          setError(null);
+          setList(data);
+        }
+      })
+      .catch((e) => { if (!cancelled) setError(e?.message ?? 'Erreur'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     eventsService.findAllAdmin().then(setEvents).catch(() => setEvents([]));
