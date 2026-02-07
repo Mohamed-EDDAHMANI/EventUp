@@ -26,7 +26,10 @@ export class ReservationsController {
   constructor(private readonly reservationsService: ReservationsService) {}
 
   @Post()
-  create(@Body() dto: CreateReservationDto, @CurrentUser() user: CurrentUserPayload) {
+  create(
+    @Body() dto: CreateReservationDto,
+    @CurrentUser() user: CurrentUserPayload,
+  ) {
     return this.reservationsService.create(dto.eventId, user.userId);
   }
 
@@ -39,7 +42,10 @@ export class ReservationsController {
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   adminCreate(@Body() dto: AdminCreateReservationDto) {
-    return this.reservationsService.createForParticipant(dto.eventId, dto.userId);
+    return this.reservationsService.createForParticipant(
+      dto.eventId,
+      dto.userId,
+    );
   }
 
   @Get('admin')
@@ -73,12 +79,16 @@ export class ReservationsController {
     @Param('id') id: string,
     @CurrentUser() user: CurrentUserPayload,
   ): Promise<StreamableFile> {
-    const { buffer, eventTitle } = await this.reservationsService.getTicketPdf(id, user.userId);
-    const safeName = eventTitle
-      .replace(/[/\\:*?"<>|]/g, '-')
-      .replace(/\s+/g, '-')
-      .slice(0, 100)
-      .trim() || 'billet-eventup';
+    const { buffer, eventTitle } = await this.reservationsService.getTicketPdf(
+      id,
+      user.userId,
+    );
+    const safeName =
+      eventTitle
+        .replace(/[/\\:*?"<>|]/g, '-')
+        .replace(/\s+/g, '-')
+        .slice(0, 100)
+        .trim() || 'billet-eventup';
     const filename = `billet-${safeName}.pdf`;
     return new StreamableFile(buffer, {
       type: 'application/pdf',
@@ -128,6 +138,10 @@ export class ReservationsController {
     @Body() updateReservationDto: UpdateReservationDto,
     @CurrentUser() user: CurrentUserPayload,
   ) {
-    return this.reservationsService.update(id, updateReservationDto, user.userId);
+    return this.reservationsService.update(
+      id,
+      updateReservationDto,
+      user.userId,
+    );
   }
 }

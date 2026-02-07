@@ -27,10 +27,12 @@ export class ReservationsService {
    * - Événement publié et à venir.
    */
   async create(eventId: string, userId: string): Promise<Reservation> {
-    const event = await this.eventsService.findOne(eventId) as Event & { reservedCount?: number };
+    const event = (await this.eventsService.findOne(eventId)) as Event & {
+      reservedCount?: number;
+    };
     if (event.status !== 'PUBLISHED') {
       throw new BadRequestException(
-        "Seuls les événements publiés peuvent être réservés",
+        'Seuls les événements publiés peuvent être réservés',
       );
     }
     if (new Date(event.dateTime) < new Date()) {
@@ -46,13 +48,14 @@ export class ReservationsService {
       .exec();
     if (existing) {
       throw new BadRequestException(
-        "Vous avez déjà une réservation pour cet événement",
+        'Vous avez déjà une réservation pour cet événement',
       );
     }
     // Vérification capacité de manière atomique (évite surréservation en concurrence)
-    const placeReserved = await this.eventsService.reservePlaceIfCapacity(eventId);
+    const placeReserved =
+      await this.eventsService.reservePlaceIfCapacity(eventId);
     if (!placeReserved) {
-      throw new BadRequestException("Plus de places disponibles");
+      throw new BadRequestException('Plus de places disponibles');
     }
     try {
       const reservation = new this.reservationModel({
@@ -70,24 +73,30 @@ export class ReservationsService {
   /**
    * Admin : crée une réservation pour un participant (mêmes règles de gestion que create).
    */
-  async createForParticipant(eventId: string, userId: string): Promise<Reservation> {
+  async createForParticipant(
+    eventId: string,
+    userId: string,
+  ): Promise<Reservation> {
     return this.create(eventId, userId);
   }
 
   async confirm(id: string, userId: string): Promise<Reservation> {
     const reservation = await this.findOne(id);
     if (reservation.user.toString() !== userId) {
-      throw new ForbiddenException("Cette réservation ne vous appartient pas");
+      throw new ForbiddenException('Cette réservation ne vous appartient pas');
     }
     if (reservation.status !== 'PENDING') {
       throw new BadRequestException(
-        "Seule une réservation en attente peut être confirmée",
+        'Seule une réservation en attente peut être confirmée',
       );
     }
     const updated = await this.reservationModel
       .findByIdAndUpdate(
         id,
-        { $set: { status: 'CONFIRMED' as ReservationStatus }, $currentDate: { updatedAt: true } },
+        {
+          $set: { status: 'CONFIRMED' as ReservationStatus },
+          $currentDate: { updatedAt: true },
+        },
         { new: true },
       )
       .populate('event', 'title dateTime location status')
@@ -103,22 +112,27 @@ export class ReservationsService {
       throw new NotFoundException(`Réservation #${id} introuvable`);
     }
     if (reservation.user.toString() !== userId) {
-      throw new ForbiddenException("Cette réservation ne vous appartient pas");
+      throw new ForbiddenException('Cette réservation ne vous appartient pas');
     }
     if (reservation.status === 'CANCELLED') {
-      throw new BadRequestException("Cette réservation est déjà annulée");
+      throw new BadRequestException('Cette réservation est déjà annulée');
     }
     const updated = await this.reservationModel
       .findByIdAndUpdate(
         id,
-        { $set: { status: 'CANCELLED' as ReservationStatus }, $currentDate: { updatedAt: true } },
+        {
+          $set: { status: 'CANCELLED' as ReservationStatus },
+          $currentDate: { updatedAt: true },
+        },
         { new: true },
       )
       .populate('event', 'title dateTime location status')
       .populate('user', 'email firstName lastName')
       .exec();
     if (!updated) throw new NotFoundException(`Réservation #${id} introuvable`);
-    await this.eventsService.decrementReservedCount(reservation.event.toString());
+    await this.eventsService.decrementReservedCount(
+      reservation.event.toString(),
+    );
     return updated;
   }
 
@@ -128,7 +142,7 @@ export class ReservationsService {
       throw new NotFoundException(`Réservation #${id} introuvable`);
     }
     if (userId && raw.user.toString() !== userId) {
-      throw new ForbiddenException("Cette réservation ne vous appartient pas");
+      throw new ForbiddenException('Cette réservation ne vous appartient pas');
     }
     const reservation = await this.reservationModel
       .findById(id)
@@ -145,7 +159,10 @@ export class ReservationsService {
    * - Le statut doit être CONFIRMED (400 sinon) : pas de téléchargement pour PENDING ou CANCELLED
    * @returns buffer et titre de l'événement (pour le nom du fichier)
    */
-  async getTicketPdf(id: string, userId: string): Promise<{ buffer: Buffer; eventTitle: string }> {
+  async getTicketPdf(
+    id: string,
+    userId: string,
+  ): Promise<{ buffer: Buffer; eventTitle: string }> {
     const reservation = await this.reservationModel
       .findById(id)
       .populate('event', 'title dateTime location')
@@ -155,19 +172,29 @@ export class ReservationsService {
       throw new NotFoundException(`Réservation #${id} introuvable`);
     }
     const ownerId =
-      typeof reservation.user === 'object' && reservation.user && '_id' in reservation.user
+      typeof reservation.user === 'object' &&
+      reservation.user &&
+      '_id' in reservation.user
         ? String((reservation.user as { _id: unknown })._id)
         : String(reservation.user);
     if (ownerId !== userId) {
-      throw new ForbiddenException("Cette réservation ne vous appartient pas");
+      throw new ForbiddenException('Cette réservation ne vous appartient pas');
     }
     if (reservation.status !== 'CONFIRMED') {
       throw new BadRequestException(
-        'Le billet PDF est disponible uniquement pour les réservations confirmées par l\'administrateur.',
+        "Le billet PDF est disponible uniquement pour les réservations confirmées par l'administrateur.",
       );
     }
-    const event = reservation.event as unknown as { title: string; dateTime: Date; location: string };
-    const user = reservation.user as unknown as { email: string; firstName: string; lastName: string };
+    const event = reservation.event as unknown as {
+      title: string;
+      dateTime: Date;
+      location: string;
+    };
+    const user = reservation.user as unknown as {
+      email: string;
+      firstName: string;
+      lastName: string;
+    };
     const eventDate = event?.dateTime
       ? new Date(event.dateTime).toLocaleString('fr-FR', {
           weekday: 'long',
@@ -178,7 +205,10 @@ export class ReservationsService {
           minute: '2-digit',
         })
       : '–';
-    const participantName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || '–';
+    const participantName =
+      [user?.firstName, user?.lastName].filter(Boolean).join(' ') ||
+      user?.email ||
+      '–';
     const confirmedAt = reservation.updatedAt
       ? new Date(reservation.updatedAt).toLocaleDateString('fr-FR')
       : undefined;
@@ -198,7 +228,10 @@ export class ReservationsService {
   async findByUser(userId: string): Promise<Reservation[]> {
     return this.reservationModel
       .find({ user: userId })
-      .populate('event', 'title dateTime location status capacity reservedCount')
+      .populate(
+        'event',
+        'title dateTime location status capacity reservedCount',
+      )
       .sort({ createdAt: -1 })
       .exec();
   }
@@ -235,7 +268,10 @@ export class ReservationsService {
     const updated = await this.reservationModel
       .findByIdAndUpdate(
         id,
-        { $set: { status: 'CONFIRMED' as ReservationStatus }, $currentDate: { updatedAt: true } },
+        {
+          $set: { status: 'CONFIRMED' as ReservationStatus },
+          $currentDate: { updatedAt: true },
+        },
         { new: true },
       )
       .populate('event', 'title dateTime location status')
@@ -251,7 +287,11 @@ export class ReservationsService {
   }
 
   /** Admin: count reservations by status. */
-  async countByStatus(): Promise<{ PENDING: number; CONFIRMED: number; CANCELLED: number }> {
+  async countByStatus(): Promise<{
+    PENDING: number;
+    CONFIRMED: number;
+    CANCELLED: number;
+  }> {
     const [pending, confirmed, cancelled] = await Promise.all([
       this.reservationModel.countDocuments({ status: 'PENDING' }).exec(),
       this.reservationModel.countDocuments({ status: 'CONFIRMED' }).exec(),
@@ -272,14 +312,19 @@ export class ReservationsService {
     const updated = await this.reservationModel
       .findByIdAndUpdate(
         id,
-        { $set: { status: 'CANCELLED' as ReservationStatus }, $currentDate: { updatedAt: true } },
+        {
+          $set: { status: 'CANCELLED' as ReservationStatus },
+          $currentDate: { updatedAt: true },
+        },
         { new: true },
       )
       .populate('event', 'title dateTime location status')
       .populate('user', 'email firstName lastName')
       .exec();
     if (!updated) throw new NotFoundException(`Réservation #${id} introuvable`);
-    await this.eventsService.decrementReservedCount(reservation.event.toString());
+    await this.eventsService.decrementReservedCount(
+      reservation.event.toString(),
+    );
     return updated;
   }
 
@@ -293,16 +338,23 @@ export class ReservationsService {
       throw new NotFoundException(`Réservation #${id} introuvable`);
     }
     if (reservation.user.toString() !== userId) {
-      throw new ForbiddenException("Cette réservation ne vous appartient pas");
+      throw new ForbiddenException('Cette réservation ne vous appartient pas');
     }
-    if (updateReservationDto.status === 'CONFIRMED' && reservation.status === 'PENDING') {
+    if (
+      updateReservationDto.status === 'CONFIRMED' &&
+      reservation.status === 'PENDING'
+    ) {
       return this.confirm(id, userId);
     }
     if (updateReservationDto.status === 'CANCELLED') {
       return this.cancel(id, userId);
     }
     const updated = await this.reservationModel
-      .findByIdAndUpdate(id, { $set: updateReservationDto, $currentDate: { updatedAt: true } }, { new: true })
+      .findByIdAndUpdate(
+        id,
+        { $set: updateReservationDto, $currentDate: { updatedAt: true } },
+        { new: true },
+      )
       .populate('event', 'title dateTime location status')
       .populate('user', 'email firstName lastName')
       .exec();

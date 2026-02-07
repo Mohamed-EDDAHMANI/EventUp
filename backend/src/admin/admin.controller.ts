@@ -26,7 +26,10 @@ export class AdminController {
       this.reservationsService.countByStatus(),
     ]);
 
-    const totalCapacity = upcomingEvents.reduce((sum, e) => sum + (e.capacity ?? 0), 0);
+    const totalCapacity = upcomingEvents.reduce(
+      (sum, e) => sum + (e.capacity ?? 0),
+      0,
+    );
     const totalReserved = upcomingEvents.reduce(
       (sum, e) => sum + (e.reservedCount ?? 0),
       0,
