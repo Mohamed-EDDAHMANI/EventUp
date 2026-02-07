@@ -100,14 +100,14 @@ describe('ReservationsPage', () => {
     });
   });
 
-  it('clicking Rafraîchir refetches reservations', async () => {
+  it('clicking Actualiser refetches reservations', async () => {
     jest.mocked(reservationsService.findMyReservations).mockResolvedValue([]);
     renderReservationsPage(true);
 
     await waitFor(() => {
       expect(screen.getByText(/Vous n'avez aucune réservation/i)).toBeInTheDocument();
     });
-    const refreshBtn = screen.getByRole('button', { name: /rafraîchir/i });
+    const refreshBtn = screen.getByRole('button', { name: /actualiser/i });
     expect(refreshBtn).not.toBeDisabled();
     fireEvent.click(refreshBtn);
     await waitFor(() => {
@@ -133,8 +133,6 @@ describe('ReservationsPage', () => {
     await waitFor(() => {
       expect(reservationsService.cancel).toHaveBeenCalledWith('r1');
     });
-    await waitFor(() => {
-      expect(reservationsService.findMyReservations).toHaveBeenCalledTimes(2);
-    });
+    expect(reservationsService.findMyReservations).toHaveBeenCalledTimes(1);
   });
 });
