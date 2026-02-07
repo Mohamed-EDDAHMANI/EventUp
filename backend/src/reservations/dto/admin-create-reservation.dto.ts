@@ -6,6 +6,6 @@ export class AdminCreateReservationDto {
   eventId: string;
 
   @IsMongoId({ message: "L'identifiant du participant est invalide" })
-  @IsNotEmpty({ message: "Le participant est requis" })
+  @IsNotEmpty({ message: 'Le participant est requis' })
   userId: string;
 }

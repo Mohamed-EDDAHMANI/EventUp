@@ -1,16 +1,9 @@
-import { getEventsForServer } from '@/lib/api/server';
 import HomePageView from './components/home-page-view';
 
-export default async function HomePage() {
-  let initialEvents: Awaited<ReturnType<typeof getEventsForServer>> = [];
-  let eventsError: string | null = null;
-  try {
-    initialEvents = await getEventsForServer();
-  } catch (e) {
-    eventsError = e instanceof Error ? e.message : 'Erreur lors du chargement des événements';
-  }
-
-  return (
-    <HomePageView initialEvents={initialEvents} eventsError={eventsError} />
-  );
+/**
+ * Home page: events are fetched client-side so they work for non-authenticated users
+ * regardless of Docker/SSR network (server cannot always reach backend).
+ */
+export default function HomePage() {
+  return <HomePageView />;
 }

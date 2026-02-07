@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
@@ -61,7 +61,7 @@ describe('Connexion -> Réservation -> Confirmation (e2e)', () => {
       }),
     );
     await app.init();
-    server = app.getHttpServer() as ReturnType<INestApplication['getHttpServer']>;
+    server = app.getHttpServer();
   }, 30000);
 
   afterAll(async () => {

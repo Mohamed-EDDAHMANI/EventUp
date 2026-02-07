@@ -1,30 +1,67 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/lib/store';
 import type { EventItem } from '@/lib/api/types';
+import { eventsService } from '@/lib/api';
 import EventsList from './events-list';
 import HeaderAuthLinks from './header-auth-links';
-
-type HomePageViewProps = {
-  initialEvents: EventItem[];
-  eventsError: string | null;
-};
 
 /**
  * Home page for PARTICIPANT and guests.
  * ADMIN users are redirected to /admin (dashboard).
+ * Events are fetched client-side so they work for non-authenticated users (no auth required for GET /events).
  */
-export default function HomePageView({
-  initialEvents,
-  eventsError,
-}: HomePageViewProps) {
+export default function HomePageView() {
   const router = useRouter();
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const role = useSelector((state: RootState) => state.auth.user?.role);
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadEvents = () => {
+    setError(null);
+    setLoading(true);
+    eventsService
+      .findAll()
+      .then((data) => {
+        setEvents(data);
+      })
+      .catch((e) => {
+        setError(e instanceof Error ? e.message : 'Erreur lors du chargement');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) {
+        setError(null);
+        setLoading(true);
+      }
+    });
+    eventsService
+      .findAll()
+      .then((data) => {
+        if (!cancelled) setEvents(data);
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : 'Erreur lors du chargement');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated && role === 'ADMIN') {
@@ -104,7 +141,12 @@ export default function HomePageView({
           )}
         </section>
 
-        <EventsList initialEvents={initialEvents} error={eventsError} />
+        <EventsList
+          initialEvents={events}
+          error={error}
+          loading={loading}
+          onRetry={loadEvents}
+        />
 
         <section className="mx-auto mt-32 grid max-w-5xl gap-8 sm:grid-cols-3">
           <div className="rounded-2xl border border-brand-deep/50 bg-brand-deep/20 p-6 text-center">
