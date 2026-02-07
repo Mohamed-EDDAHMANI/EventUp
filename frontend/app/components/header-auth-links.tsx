@@ -24,10 +24,20 @@ export default function HeaderAuthLinks() {
   };
 
   const role = useSelector((state: RootState) => state.auth.user?.role);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const displayName =
+    user?.firstName || user?.lastName
+      ? [user?.firstName, user?.lastName].filter(Boolean).join(' ')
+      : user?.email ?? '';
 
   if (isAuthenticated) {
     return (
       <div className="flex items-center gap-4">
+        {displayName && (
+          <span className="rounded-lg px-3 py-2 text-sm text-white/90">
+            {displayName}
+          </span>
+        )}
         {role === 'ADMIN' && (
           <Link
             href="/admin"

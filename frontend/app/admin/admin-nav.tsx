@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState } from '@/lib/store';
 import { clearCredentials } from '@/lib/slices/auth-slice';
 import { setAccessToken } from '@/lib/api';
 
@@ -16,6 +17,11 @@ const navLinks = [
 export default function AdminNav() {
   const router = useRouter();
   const dispatch = useDispatch();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const displayName =
+    user?.firstName || user?.lastName
+      ? [user?.firstName, user?.lastName].filter(Boolean).join(' ')
+      : user?.email ?? '';
 
   const handleLogout = () => {
     dispatch(clearCredentials());
@@ -47,6 +53,11 @@ export default function AdminNav() {
       >
         ← Retour au site
       </Link>
+      {displayName && (
+        <span className="rounded-lg px-3 py-2 text-sm text-white/90">
+          {displayName}
+        </span>
+      )}
       <button
         type="button"
         onClick={handleLogout}

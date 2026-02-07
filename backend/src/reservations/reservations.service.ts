@@ -133,7 +133,7 @@ export class ReservationsService {
   async findByUser(userId: string): Promise<Reservation[]> {
     return this.reservationModel
       .find({ user: userId })
-      .populate('event', 'title dateTime location status capacity')
+      .populate('event', 'title dateTime location status capacity reservedCount')
       .sort({ createdAt: -1 })
       .exec();
   }

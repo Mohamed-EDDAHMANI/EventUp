@@ -70,12 +70,16 @@ export default function ReserverPage() {
               >
                 Voir mes réservations
               </Link>
-              <Link
-                href={`/events/${eventId}`}
+              <button
+                type="button"
+                onClick={() => {
+                  router.push(`/events/${eventId}`);
+                  router.refresh();
+                }}
                 className="text-white/70 underline hover:text-white"
               >
-                Retour à l&apos;événement
-              </Link>
+                Retour à l&apos;événement (données à jour)
+              </button>
             </div>
           </>
         )}
