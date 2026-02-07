@@ -77,8 +77,12 @@ export default function ReservationsPage() {
       return;
     }
     let cancelled = false;
-    setLoading(true);
-    setError(null);
+    queueMicrotask(() => {
+      if (!cancelled) {
+        setLoading(true);
+        setError(null);
+      }
+    });
     reservationsService
       .findMyReservations()
       .then((data) => { if (!cancelled) setList(data); })
@@ -129,7 +133,17 @@ export default function ReservationsPage() {
       </header>
 
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <h1 className="mb-8 text-2xl font-bold text-white">Mes réservations</h1>
+        <div className="mb-8 flex items-center justify-between gap-4">
+          <h1 className="text-2xl font-bold text-white">Mes réservations</h1>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={loading}
+            className="rounded-lg border border-brand-deep/50 px-4 py-2 text-sm text-white/80 transition hover:bg-brand-deep/30 hover:text-white disabled:opacity-50"
+          >
+            Actualiser
+          </button>
+        </div>
 
         {loading && <p className="text-white/70">Chargement...</p>}
         {error && (
