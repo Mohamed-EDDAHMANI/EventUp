@@ -25,6 +25,8 @@ export const adminService = {
 
   /** Liste des participants (pour formulaire de réservation admin). */
   getParticipants(): Promise<ParticipantOption[]> {
-    return api.get<ParticipantOption[]>('/users/participants').then((r) => r.data);
+    return api
+      .get<ParticipantOption[] | unknown>('/users/participants')
+      .then((r) => (Array.isArray(r.data) ? r.data : []));
   },
 };

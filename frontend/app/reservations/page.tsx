@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
@@ -39,6 +39,14 @@ function getEventLocation(res: ReservationItem): string {
   return typeof e === 'object' && e !== null && 'location' in e ? String((e as { location: string }).location) : '–';
 }
 
+function getEventPlaces(res: ReservationItem): string | null {
+  const e = res.event;
+  if (typeof e !== 'object' || e === null) return null;
+  const ev = e as { capacity?: number; reservedCount?: number };
+  if (ev.reservedCount != null && ev.capacity != null) return `${ev.reservedCount} / ${ev.capacity}`;
+  return null;
+}
+
 const statusLabels: Record<string, string> = {
   PENDING: 'En attente',
   CONFIRMED: 'Confirmée',
@@ -52,18 +60,39 @@ export default function ReservationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [downloadingTicketId, setDownloadingTicketId] = useState<string | null>(null);
+
+  const fetchReservations = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    reservationsService
+      .findMyReservations()
+      .then(setList)
+      .catch((err) => setError(err?.message ?? 'Erreur'))
+      .finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace('/login?redirect=/reservations');
       return;
     }
+    fetchReservations();
+  }, [isAuthenticated, router, fetchReservations]);
+
+  const handleRefresh = () => {
+    setError(null);
+    fetchReservations();
+  };
+
+  const handleDownloadTicket = (id: string, eventTitle?: string) => {
+    setDownloadingTicketId(id);
+    setError(null);
     reservationsService
-      .findMyReservations()
-      .then(setList)
-      .catch((err) => setError(err?.message ?? 'Erreur'))
-      .finally(() => setLoading(false));
-  }, [isAuthenticated, router]);
+      .downloadTicketPdf(id, eventTitle)
+      .catch((err) => setError(err?.message ?? 'Impossible de télécharger le billet.'))
+      .finally(() => setDownloadingTicketId(null));
+  };
 
   const handleCancel = (id: string) => {
     setCancellingId(id);
@@ -136,8 +165,23 @@ export default function ReservationsPage() {
                 </div>
                 <p className="text-sm text-white/60">📅 {getEventDateTime(res)}</p>
                 <p className="text-sm text-white/60">📍 {getEventLocation(res)}</p>
-                {res.status !== 'CANCELLED' && (
-                  <div className="mt-4">
+                {getEventPlaces(res) != null && (
+                  <p className="text-sm text-white/60">Places : {getEventPlaces(res)}</p>
+                )}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {res.status === 'CONFIRMED' && (
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadTicket(res._id, getEventTitle(res))}
+                      disabled={downloadingTicketId === res._id}
+                      className="rounded-lg bg-green-600/80 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-600 disabled:opacity-50"
+                    >
+                      {downloadingTicketId === res._id
+                        ? 'Téléchargement...'
+                        : 'Télécharger le billet PDF'}
+                    </button>
+                  )}
+                  {res.status !== 'CANCELLED' && (
                     <button
                       type="button"
                       onClick={() => handleCancel(res._id)}
@@ -146,8 +190,8 @@ export default function ReservationsPage() {
                     >
                       {cancellingId === res._id ? 'Annulation...' : 'Annuler la réservation'}
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </li>
             ))}
           </ul>

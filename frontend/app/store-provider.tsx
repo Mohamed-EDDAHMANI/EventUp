@@ -32,7 +32,7 @@ export default function StoreProvider({
     <Provider store={store}>
       <PersistGate
         loading={null}
-        persistor={persistor}
+        persistor={persistor!}
         onBeforeLift={() => {
           const state = store.getState();
           if (state.auth.accessToken) {
