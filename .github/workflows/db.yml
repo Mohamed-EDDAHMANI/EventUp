@@ -4,6 +4,7 @@ on:
   push:
     # paths:
       # - 'docker/db/**'
+  pull_request:
   workflow_dispatch:
 
 jobs:

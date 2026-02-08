@@ -1,0 +1,57 @@
+# Production: utilise les images Docker Hub (eventup-frontend, eventup-backend, eventup-db)
+# Remplace DOCKERHUB_USERNAME par ton username Docker Hub
+version: '3.8'
+services:
+  mongo:
+    image: ${DOCKERHUB_USERNAME:-yourusername}/eventup-db:latest
+    container_name: eventup-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: eventup
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - eventup-network
+    healthcheck:
+      test: ["CMD", "mongosh", "-u", "admin", "-p", "admin123", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 25s
+
+  backend:
+    image: ${DOCKERHUB_USERNAME:-yourusername}/eventup-backend:latest
+    container_name: eventup-backend
+    restart: always
+    ports:
+      - "3001:3001"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      MONGO_URI: mongodb://admin:admin123@mongo:27017/eventup?authSource=admin
+      PORT: "3001"
+    networks:
+      - eventup-network
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME:-yourusername}/eventup-frontend:latest
+    container_name: eventup-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - eventup-network
+
+networks:
+  eventup-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
