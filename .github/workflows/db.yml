@@ -2,8 +2,9 @@ name: Database CI/CD
 
 on:
   push:
-    paths:
-      - 'docker/db/**'
+    # paths:
+      # - 'docker/db/**'
+  pull_request:
   workflow_dispatch:
 
 jobs:

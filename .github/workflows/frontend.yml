@@ -2,11 +2,11 @@ name: Frontend CI/CD
 
 on:
   push:
-    paths:
-      - 'frontend/**'
+    # paths:
+      # - 'frontend/**'
   pull_request:
-    paths:
-      - 'frontend/**'
+    # paths:
+      # - 'frontend/**'
   workflow_dispatch:
 
 jobs:

@@ -5,7 +5,7 @@ import type { EventItem } from '@/lib/api/types';
  * Use NEXT_PUBLIC_API_URL in Docker (e.g. http://backend:3001) or when set.
  */
 function getServerApiBase(): string {
-  return process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+  return 'http://backend:3001';
 }
 
 /**
